@@ -15,7 +15,7 @@ function App() {
   const {lightIntensity, preset, enviroment} = useControls('Scene', {    
     lightIntensity: {value: 1, min:0, max:4, step:0.1},
     preset: {options: ['portrait', 'rembrandt', 'upfront', 'soft']},
-    enviroment: {options: ['sunset','dawn','night','warehouse','forest','apartment','studio','city','park','lobby']}
+    enviroment: {options: ['studio','sunset','dawn','night','warehouse','forest','apartment','city','park','lobby']}
   });
   const {modalOpen} = useContext(ImageContext); 
     return (
