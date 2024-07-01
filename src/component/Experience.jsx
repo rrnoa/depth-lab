@@ -21,7 +21,7 @@ function Experience() {
     cropImg: button(() => setModalOpen(true)),
   });
 
-  const { cutHeight, maxScaleFactor, delta } = useControls('Escalar', {
+   const { cutHeight, maxScaleFactor, delta } = useControls('Escalar', {
     cutHeight: { value: 0.5 , step: 0.01 , min: 0, max: 1  },
     maxScaleFactor: { value: 5 , step: 0.01 , min: 0, max: 20  },
     delta: { options: [0.125 , 0.25 , 0.5 , 1] }
@@ -29,7 +29,7 @@ function Experience() {
 
   const { smoothEdges, toneMapped } = useControls('Filters', {
     smoothEdges: false,
-    toneMapped: false
+    toneMapped: true
   });
 
   useControls('Selected Block', {

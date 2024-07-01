@@ -7,9 +7,16 @@ import ModalCrop from "./component/ModalCrop"
 import { useContext, useState } from "react"
 import { ImageContext } from './context/ImageContext';
 import { Stage } from "@react-three/drei"
+import { useControls } from "leva"
 
 
 function App() { 
+
+  const {lightIntensity, preset, enviroment} = useControls('Scene', {    
+    lightIntensity: {value: 1, min:0, max:4, step:0.1},
+    preset: {options: ['portrait', 'rembrandt', 'upfront', 'soft']},
+    enviroment: {options: ['sunset','dawn','night','warehouse','forest','apartment','studio','city','park','lobby']}
+  });
   const {modalOpen} = useContext(ImageContext); 
     return (
       <div className="canvas-container" style={{width:'100%', height: '100%'}}>
@@ -28,7 +35,7 @@ function App() {
         style={{ width: '100%', height: '100%' }}
       >
         {/* <directionalLight position={[1, 1, 1]} /> */}
-        <Stage>
+        <Stage intensity={lightIntensity} preset={preset} environment={enviroment}>
         <Experience></Experience>
 
         </Stage>
