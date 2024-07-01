@@ -12,7 +12,7 @@ import { Stage } from "@react-three/drei"
 function App() { 
   const {modalOpen} = useContext(ImageContext); 
     return (
-      <>
+      <div className="canvas-container" style={{width:'100%', height: '100%'}}>
         {/* <LeftSideBar /> */}
       <Canvas
         gl={ {
@@ -23,8 +23,9 @@ function App() {
         camera={ {
             fov: 45,
             near: 0.1,
-            far: 7,           
+            far: 2,           
         } }
+        style={{ width: '100%', height: '100%' }}
       >
         {/* <directionalLight position={[1, 1, 1]} /> */}
         <Stage>
@@ -34,7 +35,7 @@ function App() {
       </Canvas>
       {<ModalCrop isOpen={modalOpen}/>}
         
-      </>
+      </div>
     )
     
 }
