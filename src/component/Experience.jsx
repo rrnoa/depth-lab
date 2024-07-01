@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { button, useControls } from 'leva';
@@ -32,6 +32,12 @@ function Experience() {
     toneMapped: true
   });
 
+  const scaledHeights = useMemo(() => {
+    return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
+  }, [heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges]);
+
+  const [modifiedHeights, setModifiedHeights] = useState(scaledHeights);
+
   useControls('Selected Block', {
     selectedHeightControl: {
       value: selected !== null ? modifiedHeights[selected] / INCH_TO_METERS : 0,
@@ -48,11 +54,7 @@ function Experience() {
     }
   });
 
-  const scaledHeights = useMemo(() => {
-    return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
-  }, [heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges]);
-
-  const [modifiedHeights, setModifiedHeights] = useState(scaledHeights);
+  
 
   useEffect(() => {
     setModifiedHeights(scaledHeights);
@@ -128,6 +130,7 @@ function Experience() {
         onClick={(e) => {
           e.stopPropagation();
           setSelected(e.instanceId);
+          console.log(e.instanceId)
         }}
       >
         <boxGeometry args={[blockSize * INCH_TO_METERS, blockSize * INCH_TO_METERS, 1]}>
