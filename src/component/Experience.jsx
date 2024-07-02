@@ -14,11 +14,10 @@ function Experience() {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [copiedColor, setCopiedColor] = useState(null);
   const [modifiedHeights, setModifiedHeights] = useState([]);
 
   const { perfVisible } = useControls('Inicio', {
-    perfVisible: true,
+    perfVisible: false,
     cropImg: button(() => setModalOpen(true)),
   });
 
