@@ -12,19 +12,20 @@ const INCH_TO_METERS = 0.0254;
 function Experience() {
   const { setModalOpen, heights, xBlocks, yBlocks, allColors, blockSize } = useContext(ImageContext);
   const meshRef = useRef();
-
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [copiedColor, setCopiedColor] = useState(null);
+  const [modifiedHeights, setModifiedHeights] = useState([]);
 
   const { perfVisible } = useControls('Inicio', {
     perfVisible: true,
     cropImg: button(() => setModalOpen(true)),
   });
 
-   const { cutHeight, maxScaleFactor, delta } = useControls('Escalar', {
-    cutHeight: { value: 0.5 , step: 0.01 , min: 0, max: 1  },
-    maxScaleFactor: { value: 5 , step: 0.01 , min: 0, max: 20  },
-    delta: { options: [0.125 , 0.25 , 0.5 , 1] }
+  const { cutHeight, maxScaleFactor, delta } = useControls('Escalar', {
+    cutHeight: { value: 0.5, step: 0.01, min: 0, max: 1 },
+    maxScaleFactor: { value: 5, step: 0.01, min: 0, max: 20 },
+    delta: { options: [0.125, 0.25, 0.5, 1] }
   });
 
   const { smoothEdges, toneMapped } = useControls('Filters', {
@@ -32,33 +33,17 @@ function Experience() {
     toneMapped: true
   });
 
+  const [, setBlockColor] = useControls("Copiar Colores",()=> ({
+    blockColor: 'green',
+  }))
+
   const scaledHeights = useMemo(() => {
     return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
   }, [heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges]);
 
-  const [modifiedHeights, setModifiedHeights] = useState(scaledHeights);
-
-  useControls('Selected Block', {
-    selectedHeightControl: {
-      value: selected !== null ? modifiedHeights[selected] / INCH_TO_METERS : 0,
-      step: 0.125,
-      min: 0,
-      max: 20,
-      onChange: (value) => {
-        if (selected !== null) {
-          const newHeights = [...modifiedHeights];
-          newHeights[selected] = value * INCH_TO_METERS;
-          setModifiedHeights(newHeights);
-        }
-      }
-    }
-  });
-
-  
-
   useEffect(() => {
     setModifiedHeights(scaledHeights);
-  }, [scaledHeights]);  
+  }, [scaledHeights]);
 
   const colorArray = useMemo(() => {
     const colors = new Float32Array(xBlocks * yBlocks * 3);
@@ -81,6 +66,9 @@ function Experience() {
     }
 
     if (selected !== null) {
+      //set({r: colors[selected * 3], g: colors[selected * 3 + 1], b: colors[selected * 3 + 2]})
+      console.log(`rgb(${colors[selected * 3]*255},${colors[selected * 3 + 1]*255}, ${colors[selected * 3 + 2]*255})`)
+      setBlockColor({blockColor: `rgb(${colors[selected * 3]*255},${colors[selected * 3 + 1]*255}, ${colors[selected * 3 + 2]*255})`})
       colors[selected * 3] = 1;
       colors[selected * 3 + 1] = 0;
       colors[selected * 3 + 2] = 0;
@@ -111,6 +99,27 @@ function Experience() {
     mesh.instanceMatrix.needsUpdate = true;
   }, [modifiedHeights, blockSize, xBlocks, yBlocks]);
 
+  const handleBlockClick = (e) => {
+    e.stopPropagation();
+    const instanceId = e.instanceId;
+    if (e.ctrlKey) {
+      setModifiedHeights(prevHeights => {
+        const newHeights = [...prevHeights];
+        newHeights[instanceId] += delta * INCH_TO_METERS;
+        return newHeights;
+      });
+    } else if (e.shiftKey) {
+      setModifiedHeights(prevHeights => {
+        const newHeights = [...prevHeights];
+        newHeights[instanceId] = Math.max(newHeights[instanceId] - delta * INCH_TO_METERS, 0.0254 / 2);
+        return newHeights;
+      });
+    } else {
+      setSelected(instanceId);
+    }
+  };
+
+
   return (
     <>
       {perfVisible ? <Perf position="top-left" /> : null}
@@ -127,11 +136,7 @@ function Experience() {
         onPointerOut={() => {
           setHovered(null);
         }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelected(e.instanceId);
-          console.log(e.instanceId)
-        }}
+        onClick={handleBlockClick}
       >
         <boxGeometry args={[blockSize * INCH_TO_METERS, blockSize * INCH_TO_METERS, 1]}>
           <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
