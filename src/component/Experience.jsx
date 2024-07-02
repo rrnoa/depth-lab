@@ -15,6 +15,7 @@ function Experience() {
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
   const [modifiedHeights, setModifiedHeights] = useState([]);
+  const [colorArray, setColorArray] = useState(new Float32Array());
 
   const { perfVisible } = useControls('Inicio', {
     perfVisible: false,
@@ -32,9 +33,9 @@ function Experience() {
     toneMapped: true
   });
 
-  const [, setBlockColor] = useControls("Copiar Colores",()=> ({
-    blockColor: 'green',
-  }))
+  const [{ blockColor }, setBlockColor] = useControls("Copiar Colores", () => ({
+    blockColor: 'rgb(0, 255, 0)',
+  }));
 
   const scaledHeights = useMemo(() => {
     return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
@@ -44,14 +45,14 @@ function Experience() {
     setModifiedHeights(scaledHeights);
   }, [scaledHeights]);
 
-  const colorArray = useMemo(() => {
+  useEffect(() => {
     const colors = new Float32Array(xBlocks * yBlocks * 3);
     allColors.forEach((color, i) => {
       colors[i * 3] = color[0] / 255;
       colors[i * 3 + 1] = color[1] / 255;
       colors[i * 3 + 2] = color[2] / 255;
     });
-    return colors;
+    setColorArray(colors);
   }, [allColors, xBlocks, yBlocks]);
 
   useEffect(() => {
@@ -65,9 +66,6 @@ function Experience() {
     }
 
     if (selected !== null) {
-      //set({r: colors[selected * 3], g: colors[selected * 3 + 1], b: colors[selected * 3 + 2]})
-      console.log(`rgb(${colors[selected * 3]*255},${colors[selected * 3 + 1]*255}, ${colors[selected * 3 + 2]*255})`)
-      setBlockColor({blockColor: `rgb(${colors[selected * 3]*255},${colors[selected * 3 + 1]*255}, ${colors[selected * 3 + 2]*255})`})
       colors[selected * 3] = 1;
       colors[selected * 3 + 1] = 0;
       colors[selected * 3 + 2] = 0;
@@ -76,6 +74,48 @@ function Experience() {
     mesh.geometry.attributes.color.array = colors;
     mesh.geometry.attributes.color.needsUpdate = true;
   }, [hovered, selected, colorArray]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === 'c') {
+        if (selected !== null) {
+          setBlockColor({ blockColor: `rgb(${allColors[selected][0]}, ${allColors[selected][1]}, ${allColors[selected][2]})` });
+        }
+      } else if (e.ctrlKey && e.key === 'v') {
+        if (selected !== null) {
+          const levaColor = new THREE.Color(blockColor);
+          setBlockColorOnMesh(selected, levaColor);
+          updateColorArray(selected, levaColor);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selected, setBlockColor, blockColor, allColors]);
+
+  const setBlockColorOnMesh = (id, color) => {
+    const mesh = meshRef.current;
+    const colorArray = new Float32Array(mesh.geometry.attributes.color.array);
+    colorArray[id * 3] = color.r;
+    colorArray[id * 3 + 1] = color.g;
+    colorArray[id * 3 + 2] = color.b;
+    mesh.geometry.attributes.color.array = colorArray;
+    mesh.geometry.attributes.color.needsUpdate = true;
+  };
+
+  const updateColorArray = (id, color) => {
+    setColorArray((prev) => {
+      const newColors = new Float32Array(prev);
+      newColors[id * 3] = color.r;
+      newColors[id * 3 + 1] = color.g;
+      newColors[id * 3 + 2] = color.b;
+      return newColors;
+    });
+  };
 
   useEffect(() => {
     const blockSizeInch = blockSize * INCH_TO_METERS;
@@ -117,7 +157,6 @@ function Experience() {
       setSelected(instanceId);
     }
   };
-
 
   return (
     <>
