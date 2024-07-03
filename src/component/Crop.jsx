@@ -148,9 +148,13 @@ const Crop = () => {
             <option value={0.5}>0.5</option>
           </select>
         </div> 
-        <button onClick={()=>handlerAplicar()}>Aplicar
+        <button onClick={()=>handlerAplicar()}>
+          <span className="ok desktop-text">Aceptar</span>
+          <span className="ok mobile-text">Ok</span>
         </button>   
-        <button onClick={()=>setModalOpen(false)}>Cancelar
+        <button onClick={()=>setModalOpen(false)}>
+          <span className="cancel desktop-text">Cancelar</span>
+          <span className="cancel mobile-text">X</span>
         </button>   
       </div>
     </div>

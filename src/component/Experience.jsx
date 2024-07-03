@@ -4,7 +4,9 @@ import { OrbitControls } from '@react-three/drei';
 import { button, useControls } from 'leva';
 import { Perf } from 'r3f-perf';
 import { ImageContext } from '../context/ImageContext';
+import { ExperienceContext } from '../context/ExperienceContext';
 import { escalarPulgadas, smoothHeightMapContrast } from '../lib/Filters';
+import { saveDataToFile, prepareDataForSave } from '../lib/storageUtils';
 
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
@@ -12,10 +14,12 @@ const INCH_TO_METERS = 0.0254;
 function Experience() {
   const { setModalOpen, heights, xBlocks, yBlocks, allColors, blockSize } = useContext(ImageContext);
   const meshRef = useRef();
+  const { modifiedHeights, setModifiedHeights, colorArray, setColorArray } = useContext(ExperienceContext);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [modifiedHeights, setModifiedHeights] = useState([]);
-  const [colorArray, setColorArray] = useState(new Float32Array());
+  //const [modifiedHeights, setModifiedHeights] = useState([]);
+  //const [colorArray, setColorArray] = useState(new Float32Array());
+  const saveRef = useRef({ heights: modifiedHeights, colors: colorArray });
 
   const { perfVisible } = useControls('Inicio', {
     perfVisible: false,
@@ -37,14 +41,25 @@ function Experience() {
     blockColor: 'rgb(0, 255, 0)',
   }));
 
+  useControls('Guardar Datos', {
+    guardar: button(() => {
+      console.log(saveRef.current.colors)
+      const data = prepareDataForSave(saveRef.current.heights, saveRef.current.colors);
+      saveDataToFile(data);
+    })
+  });  
+
+  //escalar las alturas originales
   const scaledHeights = useMemo(() => {
     return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
   }, [heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges]);
 
+  //Cuando se escalan las alturas por primera vez se actualiza modifiedHeights
   useEffect(() => {
     setModifiedHeights(scaledHeights);
   }, [scaledHeights]);
 
+  //Se crea colorArray con los colores originales
   useEffect(() => {
     const colors = new Float32Array(xBlocks * yBlocks * 3);
     allColors.forEach((color, i) => {
@@ -55,6 +70,7 @@ function Experience() {
     setColorArray(colors);
   }, [allColors, xBlocks, yBlocks]);
 
+  //cambiar el color de un bloque cuando se selecciona/hover
   useEffect(() => {
     const mesh = meshRef.current;
     const colors = new Float32Array(colorArray);
@@ -75,6 +91,7 @@ function Experience() {
     mesh.geometry.attributes.color.needsUpdate = true;
   }, [hovered, selected, colorArray]);
 
+  //reacciona a los click + teclas de función CTRL SHIFT
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.key === 'c') {
@@ -97,6 +114,7 @@ function Experience() {
     };
   }, [selected, setBlockColor, blockColor, allColors]);
 
+  //Actualiza en instanceMesh el color copiado/pegado
   const setBlockColorOnMesh = (id, color) => {
     const mesh = meshRef.current;
     const colorArray = new Float32Array(mesh.geometry.attributes.color.array);
@@ -107,6 +125,7 @@ function Experience() {
     mesh.geometry.attributes.color.needsUpdate = true;
   };
 
+  //actualiza el arreglo de colores para que no se pierda
   const updateColorArray = (id, color) => {
     setColorArray((prev) => {
       const newColors = new Float32Array(prev);
@@ -117,6 +136,7 @@ function Experience() {
     });
   };
 
+  //modifica las alturas y las posiciones de los bloques del instaceMesh
   useEffect(() => {
     const blockSizeInch = blockSize * INCH_TO_METERS;
     const mesh = meshRef.current;
@@ -158,8 +178,12 @@ function Experience() {
     }
   };
 
+  useEffect(() => {
+    saveRef.current = { heights: modifiedHeights, colors: colorArray };
+  }, [modifiedHeights, colorArray]);
+
   return (
-    <>
+    <>    
       {perfVisible ? <Perf position="top-left" /> : null}
       <OrbitControls />
       <instancedMesh
@@ -181,6 +205,8 @@ function Experience() {
         </boxGeometry>
         <meshStandardMaterial toneMapped={toneMapped} vertexColors />
       </instancedMesh>
+      
+      
     </>
   );
 }

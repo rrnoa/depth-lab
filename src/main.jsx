@@ -1,14 +1,22 @@
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import ImageContextProvider from './context/ImageContext';
+import ExperienceContextProvider from "./context/ExperienceContext"
+
+import { Loader } from '@react-three/drei';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ImageContextProvider>
-      <App></App>
+      <ExperienceContextProvider>
+        <Suspense>
+          <App/>
+        </Suspense>
+        <Loader/>
+      </ExperienceContextProvider>      
     </ImageContextProvider>    
   </StrictMode>
 )
