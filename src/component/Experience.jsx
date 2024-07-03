@@ -17,8 +17,6 @@ function Experience() {
   const { modifiedHeights, setModifiedHeights, colorArray, setColorArray } = useContext(ExperienceContext);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
-  //const [modifiedHeights, setModifiedHeights] = useState([]);
-  //const [colorArray, setColorArray] = useState(new Float32Array());
   const saveRef = useRef({ heights: modifiedHeights, colors: colorArray });
 
   const { perfVisible } = useControls('Inicio', {
@@ -59,13 +57,13 @@ function Experience() {
     setModifiedHeights(scaledHeights);
   }, [scaledHeights]);
 
-  //Se crea colorArray con los colores originales
   useEffect(() => {
     const colors = new Float32Array(xBlocks * yBlocks * 3);
     allColors.forEach((color, i) => {
-      colors[i * 3] = color[0] / 255;
-      colors[i * 3 + 1] = color[1] / 255;
-      colors[i * 3 + 2] = color[2] / 255;
+      const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      colors[i * 3] = colorObj.r;
+      colors[i * 3 + 1] = colorObj.g;
+      colors[i * 3 + 2] = colorObj.b;
     });
     setColorArray(colors);
   }, [allColors, xBlocks, yBlocks]);
