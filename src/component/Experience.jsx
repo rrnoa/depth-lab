@@ -112,6 +112,31 @@ function Experience() {
     };
   }, [selected, setBlockColor, blockColor, allColors]);
 
+  // Manejar las teclas de dirección para seleccionar el bloque adyacente
+  useEffect(() => {
+    const handleArrowKeyDown = (e) => {
+      if (selected !== null) {
+        let newSelected = selected;
+        if (e.key === 'ArrowUp' && selected >= xBlocks) {
+          newSelected = selected - xBlocks;
+        } else if (e.key === 'ArrowDown' && selected < (xBlocks * yBlocks) - xBlocks) {
+          newSelected = selected + xBlocks;
+        } else if (e.key === 'ArrowLeft' && selected % xBlocks !== 0) {
+          newSelected = selected - 1;
+        } else if (e.key === 'ArrowRight' && (selected + 1) % xBlocks !== 0) {
+          newSelected = selected + 1;
+        }
+        setSelected(newSelected);
+      }
+    };
+
+    window.addEventListener('keydown', handleArrowKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleArrowKeyDown);
+    };
+  }, [selected, xBlocks, yBlocks]);
+
   //Actualiza en instanceMesh el color copiado/pegado
   const setBlockColorOnMesh = (id, color) => {
     const mesh = meshRef.current;

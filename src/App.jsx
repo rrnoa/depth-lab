@@ -49,6 +49,7 @@ function App() {
     return (    
       <div className="canvas-container" style={{width:'100%', height: '100%'}}>
       <Canvas
+        frameloop="demand"
         gl={ {
             antialias: false,
             toneMapping: THREE.ACESFilmicToneMapping,
