@@ -82,3 +82,18 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@media (max-width: 600px) {
+  [class="leva-c-PJLV"]:nth-child(1),
+  [class="leva-c-PJLV"]:nth-child(2),
+  [class="leva-c-PJLV"]:nth-child(5),
+  [class="leva-c-PJLV"]:nth-child(6),
+  [class="leva-c-PJLV"]:nth-child(7)
+
+  {
+    display: none !important;
+
+  }  
+}
+
+

@@ -11,18 +11,25 @@ import { saveDataToFile, prepareDataForSave } from '../lib/storageUtils';
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
 
+const isMobile = () => {  
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
+
 function Experience() {
+
   const { setModalOpen, heights, xBlocks, yBlocks, allColors, blockSize } = useContext(ImageContext);
   const meshRef = useRef();
   const { modifiedHeights, setModifiedHeights, colorArray, setColorArray } = useContext(ExperienceContext);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
   const saveRef = useRef({ heights: modifiedHeights, colors: colorArray });
-
-  const { perfVisible } = useControls('Inicio', {
+  
+ 
+  useControls('Inicio', {
     perfVisible: false,
     cropImg: button(() => setModalOpen(true)),
   });
+
 
   const { cutHeight, maxScaleFactor, delta } = useControls('Escalar', {
     cutHeight: { value: 0.5, step: 0.01, min: 0, max: 1 },
@@ -45,7 +52,8 @@ function Experience() {
       const data = prepareDataForSave(saveRef.current.heights, saveRef.current.colors);
       saveDataToFile(data);
     })
-  });  
+  }); 
+
 
   //escalar las alturas originales
   const scaledHeights = useMemo(() => {
@@ -207,7 +215,7 @@ function Experience() {
 
   return (
     <>    
-      {perfVisible ? <Perf position="top-left" /> : null}
+      {/* {perfVisible ? <Perf position="top-left" /> : null} */}
       <OrbitControls />
       <instancedMesh
         ref={meshRef}

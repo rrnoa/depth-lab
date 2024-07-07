@@ -1,10 +1,9 @@
 import Experience from "./component/Experience"
 import './App.css'
-import LeftSideBar from "./component/LeftSideBar"
 import { Canvas } from "@react-three/fiber"
 import * as THREE from 'three'
 import ModalCrop from "./component/ModalCrop"
-import { useContext, useRef, useState } from "react"
+import { useContext, useRef } from "react"
 import { ImageContext } from './context/ImageContext';
 import { Stage } from "@react-three/drei"
 import { button, useControls } from "leva"
