@@ -1,15 +1,23 @@
 import { useState, useEffect, useContext } from 'react';
+import * as THREE from 'three';
 import Cropper from 'react-easy-crop';
 import "react-easy-crop/react-easy-crop.css";
 import './Crop.css';
 import getCroppedImg from '../lib/cropImage';
 import pixelateImg from "../lib/pixelate";
 import { ImageContext } from '../context/ImageContext';
+import { ExperienceContext } from '../context/ExperienceContext'; 
 import ImageSidebar from './ImageSidebar';
 import { pixelate16 } from '../lib/pixel16';
+import Barloader from "react-spinners/ClipLoader";
 
+const override = {
+  display: "block",
+  margin: "0 auto"
+};
 
 const Crop = () => {
+
   const {blockSize,
       setBlockSize,      
       setXBlocks,      
@@ -22,7 +30,7 @@ const Crop = () => {
       frameWidth, setFrameWidth,
       frameHeight, setFrameHeight} = useContext(ImageContext);
   
-      const [processing, setProcessing] = useState(false)
+  const {setColorArray, processing, setProcessing} = useContext(ExperienceContext);  
   
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -66,21 +74,24 @@ const Crop = () => {
     }
   }
 
-  /* useEffect(() => {
-    if (croppedAreaPixels) {
-      onCropComplete(null, croppedAreaPixels);
-    }
-  }, [blockSize]);
- */
   const pixelateImgHandler = async () => {
     setProcessing(true);
     const PixelObj = await pixelateImg(croppedImage, frameWidth, frameHeight, blockSize);
       //setPxImg(PixelObj.imageURL);
       setAllColors(PixelObj.allColors);
       setXBlocks(PixelObj.xBlocks);
-      setYBlocks(PixelObj.yBlocks);      
+      setYBlocks(PixelObj.yBlocks); 
+      
+      const colors = new Float32Array(PixelObj.xBlocks * PixelObj.yBlocks * 3);
+      PixelObj.allColors.forEach((color, i) => {
+      const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      colors[i * 3] = colorObj.r;
+      colors[i * 3 + 1] = colorObj.g;
+      colors[i * 3 + 2] = colorObj.b;
+    });
+    setColorArray(colors);
 
-      await loadDepthMap(PixelObj.imageURL, PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
+    await loadDepthMap(PixelObj.imageURL, PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
 
   }
 
@@ -91,7 +102,6 @@ const Crop = () => {
   }
 
   const onCropComplete = async (croppedArea, croppedAreaPixels) => {
-    console.log("crop completado")
     setCroppedAreaPixels(croppedAreaPixels);
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
@@ -104,8 +114,8 @@ const Crop = () => {
 
    return (
    <>
-   {processing?console.log("Procesando..."):console.log("Procesamiento terminado :)")}
-   <div className="new-screen-container">
+
+    <div className="new-screen-container">
       <div className="main-area">
         {imageSrc  && (
           <Cropper

@@ -61,9 +61,20 @@ function Experience() {
     setModifiedHeights(scaledHeights);
   }, [scaledHeights]);
 
+/*     useEffect(() => {
+
+    const colors = new Float32Array(xBlocks * yBlocks * 3);
+    allColors.forEach((color, i) => {
+      const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      colors[i * 3] = colorObj.r;
+      colors[i * 3 + 1] = colorObj.g;
+      colors[i * 3 + 2] = colorObj.b;
+    });
+    setColorArray(colors);
+  }, [allColors, xBlocks, yBlocks]);   */
+
   //cambiar el color de un bloque cuando se selecciona/hover
   useEffect(() => {
-    if (meshRef.current) {
     console.log("useefect hover")
     const mesh = meshRef.current;
     const colors = new Float32Array(colorArray);
@@ -82,11 +93,10 @@ function Experience() {
 
     mesh.geometry.attributes.color.array = colors;
     mesh.geometry.attributes.color.needsUpdate = true;
-  }
   }, [hovered, selected, colorArray]);
 
 
-useEffect(() => {
+/*   useEffect(() => {
     const handleKeyDown = (e) => {
         if (selected !== null) {
             if (e.key === '+') {
@@ -120,11 +130,11 @@ useEffect(() => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-}, [selected, setBlockColor, blockColor, allColors, delta]);
+}, [selected, setBlockColor, blockColor, allColors, delta]); */
 
 
 
-  // Manejar las teclas de dirección para seleccionar el bloque adyacente
+  /* // Manejar las teclas de dirección para seleccionar el bloque adyacente
   useEffect(() => {
     const handleArrowKeyDown = (e) => {
       if (selected !== null) {
@@ -147,7 +157,7 @@ useEffect(() => {
     return () => {
       window.removeEventListener('keydown', handleArrowKeyDown);
     };
-  }, [selected, xBlocks, yBlocks]);
+  }, [selected, xBlocks, yBlocks]); */
 
   //Actualiza en instanceMesh el color copiado/pegado
   const setBlockColorOnMesh = (id, color) => {
@@ -173,27 +183,25 @@ useEffect(() => {
 
   //modifica las alturas y las posiciones de los bloques del instaceMesh
   useEffect(() => {
-    if (meshRef.current) {
-      console.log("modifica las alturas y las posiciones de los bloques del instaceMesh")
-      const blockSizeInch = blockSize * INCH_TO_METERS;
-      const mesh = meshRef.current;
-      let i = 0;
-      for (let j = 0; j < yBlocks; j++) {
-        for (let k = 0; k < xBlocks; k++) {
-          const id = i++;
-          const height = modifiedHeights[id];
-          tempObject.position.set(
-            k * blockSizeInch - (xBlocks * blockSizeInch) / 2,
-            (yBlocks - j - 1) * blockSizeInch - (yBlocks * blockSizeInch) / 2,
-            height / 2
-          );
-          tempObject.scale.set(1, 1, height);
-          tempObject.updateMatrix();
-          mesh.setMatrixAt(id, tempObject.matrix);
-        }
+    console.log("modifica las alturas y las posiciones de los bloques del instaceMesh")
+    const blockSizeInch = blockSize * INCH_TO_METERS;
+    const mesh = meshRef.current;
+    let i = 0;
+    for (let j = 0; j < yBlocks; j++) {
+      for (let k = 0; k < xBlocks; k++) {
+        const id = i++;
+        const height = modifiedHeights[id];
+        tempObject.position.set(
+          k * blockSizeInch - (xBlocks * blockSizeInch) / 2,
+          (yBlocks - j - 1) * blockSizeInch - (yBlocks * blockSizeInch) / 2,
+          height / 2
+        );
+        tempObject.scale.set(1, 1, height);
+        tempObject.updateMatrix();
+        mesh.setMatrixAt(id, tempObject.matrix);
+      }
     }
     mesh.instanceMatrix.needsUpdate = true;
-    }
   }, [modifiedHeights, blockSize, xBlocks, yBlocks]);
 
   const handleBlockClick = (e) => {
@@ -202,10 +210,10 @@ useEffect(() => {
     setSelected(instanceId);
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     saveRef.current = { heights: modifiedHeights, colors: colorArray };
   }, [modifiedHeights, colorArray]);
- 
+ */
   return (
     <>
       {perfVisible ? <Perf position="top-left" /> : null} 
@@ -217,7 +225,7 @@ useEffect(() => {
         receiveShadow
         onPointerMove={(e) => {
           e.stopPropagation();
-          console.log(e.instanceId)
+          console.log("move")
           setHovered(e.instanceId);
         }}
         onPointerOut={() => {
@@ -230,6 +238,8 @@ useEffect(() => {
         </boxGeometry>
         <meshStandardMaterial toneMapped={toneMapped} vertexColors />
       </instancedMesh>
+      
+      
     </>
   );
 }

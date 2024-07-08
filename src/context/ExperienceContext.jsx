@@ -5,10 +5,12 @@ export const ExperienceContext = createContext();
 const ExperienceContextProvider = ({children}) => {
   const [modifiedHeights, setModifiedHeights] = useState([]);
   const [colorArray, setColorArray] = useState(new Float32Array());
+  const [processing, setProcessing] = useState(false);
   
   const data = { 
     modifiedHeights, setModifiedHeights,
-    colorArray, setColorArray  
+    colorArray, setColorArray,
+    processing, setProcessing
   }
 
   return ( 

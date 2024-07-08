@@ -31,7 +31,6 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       loadDataFromFile(file, (data) => {
-        console.log(data)
         // Actualizar los estados del contexto
         setModifiedHeights(data.heights);
         const colors = new Float32Array(data.colors.length * 3);
@@ -45,8 +44,8 @@ function App() {
     }
   };
 
-    return (    
-      <div className="canvas-container" style={{width:'100%', height: '100%'}}>
+    return (       
+      <div id="canvas-container" className="canvas-container" style={{width:'100%', height: '100%'}}>
       <Canvas
         frameloop="demand"
         gl={ {

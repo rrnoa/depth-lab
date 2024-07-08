@@ -9,7 +9,6 @@ import { Loader } from '@react-three/drei';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <StrictMode>
     <ImageContextProvider>
       <ExperienceContextProvider>
         <Suspense>
@@ -17,6 +16,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </Suspense>
         <Loader/>
       </ExperienceContextProvider>      
-    </ImageContextProvider>    
-  </StrictMode>
+    </ImageContextProvider>
 )

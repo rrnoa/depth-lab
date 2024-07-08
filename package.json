@@ -20,6 +20,7 @@
     "react-easy-crop": "^5.0.7",
     "react-modal": "^3.16.1",
     "react-pro-sidebar": "^1.1.0",
+    "react-spinners": "^0.14.1",
     "three": "^0.165.0",
     "upng-js": "^2.1.0"
   },
