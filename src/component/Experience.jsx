@@ -44,7 +44,6 @@ function Experience() {
 
   useControls('Guardar Datos', {
     guardar: button(() => {
-      console.log(saveRef.current.colors)
       const data = prepareDataForSave(saveRef.current.heights, saveRef.current.colors);
       saveDataToFile(data);
     })
@@ -63,7 +62,7 @@ function Experience() {
 
   //cambiar el color de un bloque cuando se selecciona/hover
   useEffect(() => {
-    if (meshRef.current) {
+    if (meshRef.current && colorArray.length > 0) {
     console.log("useefect hover")
     const mesh = meshRef.current;
     const colors = new Float32Array(colorArray);
@@ -83,10 +82,9 @@ function Experience() {
     mesh.geometry.attributes.color.array = colors;
     mesh.geometry.attributes.color.needsUpdate = true;
   }
-  }, [hovered, selected, colorArray]);
+  }, [hovered, selected, colorArray]); 
 
-
-useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e) => {
         if (selected !== null) {
             if (e.key === '+') {
@@ -121,8 +119,6 @@ useEffect(() => {
         window.removeEventListener('keydown', handleKeyDown);
     };
 }, [selected, setBlockColor, blockColor, allColors, delta]);
-
-
 
   // Manejar las teclas de dirección para seleccionar el bloque adyacente
   useEffect(() => {
@@ -173,7 +169,8 @@ useEffect(() => {
 
   //modifica las alturas y las posiciones de los bloques del instaceMesh
   useEffect(() => {
-    if (meshRef.current) {
+    if (meshRef.current && modifiedHeights.length > 0) {
+      console.log(modifiedHeights, blockSize, xBlocks, yBlocks)
       console.log("modifica las alturas y las posiciones de los bloques del instaceMesh")
       const blockSizeInch = blockSize * INCH_TO_METERS;
       const mesh = meshRef.current;
