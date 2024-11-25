@@ -82,11 +82,11 @@ const Crop = () => {
       const depthBlob = await response.blob();
 
       // Opción de descarga
-      const downloadLink = document.createElement("a");
+    /*   const downloadLink = document.createElement("a");
       const depthUrl = URL.createObjectURL(depthBlob);
       downloadLink.href = depthUrl;
       downloadLink.download = "depth_map.png"; // Nombre del archivo descargado
-      downloadLink.click();
+      downloadLink.click(); */
 
 
       const arrayBuffer = await depthBlob.arrayBuffer();
