@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import * as THREE from 'three';
 import Cropper from 'react-easy-crop';
 import "react-easy-crop/react-easy-crop.css";
@@ -37,7 +37,10 @@ const Crop = () => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   //const [pxImg, setPxImg] = useState(null)
   const [imageSrc, setImageSrc] = useState(null)
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [croppedImage, setCroppedImage] = useState(null)
+
+  const imgInputRef = useRef(null);
 
 
   useEffect(() => {
@@ -60,23 +63,58 @@ const Crop = () => {
 
   const loadDepthMap = async (pxImg, xBlocks, yBlocks, startX, startY) => {
     try {
-      // Fetch the depth map image from the URL      
-      const response = await fetch(selectedDepthMap);
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, startX, startY, (alturas) => {
-        setHeights(alturas);
-        setProcessing(false)
+
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
+      // Realizar la solicitud a la API
+      const response = await fetch("https://rrnoa-woodxel-marigold-v2.hf.space/predict-depth/", {
+        method: "POST",
+        body: formData,
       });
   
+      if (!response.ok) {
+        throw new Error(`Error en la API: ${response.statusText}`);
+      }
+
+
+  
+      // Recibir la imagen de profundidad como blob
+      const depthBlob = await response.blob();
+
+      // Opción de descarga
+      const downloadLink = document.createElement("a");
+      const depthUrl = URL.createObjectURL(depthBlob);
+      downloadLink.href = depthUrl;
+      downloadLink.download = "depth_map.png"; // Nombre del archivo descargado
+      downloadLink.click();
+
+
+      const arrayBuffer = await depthBlob.arrayBuffer();
+  
+      // Procesar la imagen de profundidad
+      pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, startX, startY, (alturas) => {
+        setHeights(alturas);
+        console.log(alturas);
+        setProcessing(false);
+      });
     } catch (error) {
-      console.error('Error loading depth map image:', error);
+      console.error("Error loading depth map image:", error);
     }
-  }
+  };
+  
+
+  const base64ToBlob = (pxImg) => {
+    const base64Data = pxImg.split(",")[1]; // Remover el prefijo "data:image/png;base64,"
+    const binaryData = atob(base64Data);
+    const byteNumbers = Array.from(binaryData, (char) => char.charCodeAt(0));
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: "image/png" });
+    return blob
+  };
 
   const pixelateImgHandler = async () => {
     setProcessing(true);
     const PixelObj = await pixelateImg(croppedImage, frameWidth, frameHeight, blockSize);
+
     await loadDepthMap(PixelObj.imageURL, PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
 
       //setPxImg(PixelObj.imageURL);
@@ -111,25 +149,63 @@ const Crop = () => {
     }
   };
 
+  const handleFile = (file) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageSrc(e.target.result); // Guarda la imagen en formato Base64
+      };
+      reader.readAsDataURL(file);
+  
+      setUploadedFile(file); // Guarda el archivo original
+    }
+  };
+
    return (
    <>
 
     <div className="new-screen-container">
       <div className="main-area">
-        {imageSrc  && (
+        {!imageSrc ? (
+          <div
+            className="upload-area"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files[0];
+              handleFile(file);
+            }}
+            onClick={() => imgInputRef.current.click()}
+          >
+            <p>Haz clic o arrastra una imagen aquí para cargarla</p>
+          </div>
+        ) : (
           <Cropper
-          image={imageSrc}
-          crop={crop}
-          zoom={zoom}
-          aspect={frameWidth / frameHeight}
-          onCropChange={setCrop}
-          onCropComplete={onCropComplete}
-          onZoomChange={setZoom}
-          zoomSpeed = {0.2}
-        />
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={frameWidth / frameHeight}
+            onCropChange={setCrop}
+            onCropComplete={onCropComplete}
+            onZoomChange={setZoom}
+            zoomSpeed={0.2}
+          />
         )}
+        <input
+          type="file"
+          accept=".png, .jpg, .jpeg"
+          ref={imgInputRef}
+          style={{ display: 'none' }}
+          onChange={(e) => handleFile(e.target.files[0])}
+        />
       </div>
-      <ImageSidebar/>
+      {imageSrc && (
+        <div className="image-controls">
+          <button onClick={() => imgInputRef.current.click()}>
+            Cambiar imagen
+          </button>
+        </div>
+      )}
       <div className="bottom-section">
         <div className="input-group">
           <label htmlFor="width">Ancho:</label>
@@ -142,13 +218,13 @@ const Crop = () => {
         <div className="input-group">
           <label htmlFor="height">Alto:</label>
           <input
-            type="number"            
+            type="number"
             value={frameHeight}
             onChange={(e) => setFrameHeight(e.target.value)}
           />
         </div>
         <div className="input-group">
-          <label htmlFor="height">Ancho del bloque</label>
+          <label htmlFor="blockSize">Ancho del bloque:</label>
           <select
             value={blockSize}
             onChange={(e) => setBlockSize(Number(e.target.value))}
@@ -156,17 +232,18 @@ const Crop = () => {
             <option value={1}>1</option>
             <option value={0.5}>0.5</option>
           </select>
-        </div> 
-        <button onClick={()=>handlerAplicar()}>
+        </div>
+        <button onClick={() => handlerAplicar()}>
           <span className="ok desktop-text">Aceptar</span>
           <span className="ok mobile-text">Ok</span>
-        </button>   
-        <button onClick={()=>setModalOpen(false)}>
+        </button>
+        <button onClick={() => setModalOpen(false)}>
           <span className="cancel desktop-text">Cancelar</span>
           <span className="cancel mobile-text">X</span>
-        </button>   
+        </button>
       </div>
     </div>
+
    </>    
   );
 };

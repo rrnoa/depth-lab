@@ -23,7 +23,6 @@ const ImageSidebar = () => {
     { image: '14.jpg', depthMap: '14_depth.png' },
     { image: '15.jpeg', depthMap: '15_depth.png' },
     { image: '16.jpg', depthMap: '16_depth.png' },
-    // Añade aquí el nombre de todas las imágenes y sus mapas de profundidad en la carpeta img
   ];
 
   const clickHandler = (pair)=> {

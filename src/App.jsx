@@ -21,6 +21,7 @@ function App() {
   const {modalOpen} = useContext(ImageContext);
   const {setModifiedHeights, setColorArray} = useContext(ExperienceContext);
 
+
   useControls('Cargar Datos', {
     cargar: button(() => {
       fileInputRef.current.click();
@@ -41,6 +42,13 @@ function App() {
         });
         setColorArray(colors);
       });
+    }
+  };
+
+  const handleLoadImg = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      console.log('cargando imagen')
     }
   };
 
@@ -73,7 +81,7 @@ function App() {
         ref={fileInputRef}
         style={{ display: 'none' }}
         onChange={handleLoad}
-      /> 
+      />
       </div>
     )
     
