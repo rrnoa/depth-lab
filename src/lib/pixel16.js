@@ -1,6 +1,6 @@
 import UPNG from 'upng-js';
 
-export async function pixelate16(buffer, pixelImageUrl, numBlocksX, numBlocksY, startX, startY, callback) {
+export async function pixelate16(buffer, pixelImageUrl, numBlocksX, numBlocksY, callback) {
   const pxImg = new Image();
   pxImg.src = pixelImageUrl;
 
@@ -23,8 +23,8 @@ export async function pixelate16(buffer, pixelImageUrl, numBlocksX, numBlocksY, 
     let data = png.data;
     // Asegurarnos de que estamos manejando datos de 16 bits
     if (depth === 16) {
-      for (let y = startY; y < startY + height; y++) {
-        for (let x = startX; x < startX + width; x++) {
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
           const idx = (y * png.width + x) * 2;
           if (idx >= data.length) continue; // Evitar el desbordamiento de índice
           const value = (data[idx] << 8) | data[idx + 1];
@@ -33,11 +33,11 @@ export async function pixelate16(buffer, pixelImageUrl, numBlocksX, numBlocksY, 
       }
     } else {
       // Manejo de otras profundidades (e.g., 8 bits por canal)
-      for (let y = startY; y < startY + height; y++) {
-        for (let x = startX; x < startX + width; x++) {
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
           const idx = (y * png.width + x) * 4;
           if (idx >= data.length) continue; // Evitar el desbordamiento de índice
-          const pixelIdx = ((y - startY) * width + (x - startX)) * 4;
+          const pixelIdx = (y * width + x) * 4;
           imageData.data[pixelIdx] = data[idx];
           imageData.data[pixelIdx + 1] = data[idx + 1];
           imageData.data[pixelIdx + 2] = data[idx + 2];

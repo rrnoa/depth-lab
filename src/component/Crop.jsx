@@ -64,8 +64,12 @@ const Crop = () => {
   const loadDepthMap = async (pxImg, xBlocks, yBlocks, startX, startY) => {
     try {
 
+      const responseFromUrl = await fetch(croppedImage);
+      const blob = await responseFromUrl.blob(); 
+
       const formData = new FormData();
-      formData.append("file", uploadedFile);
+      formData.append("file", blob); 
+
       // Realizar la solicitud a la API
       const response = await fetch("https://rrnoa-woodxel-marigold-v2.hf.space/predict-depth/", {
         method: "POST",
@@ -75,24 +79,21 @@ const Crop = () => {
       if (!response.ok) {
         throw new Error(`Error en la API: ${response.statusText}`);
       }
-
-
   
       // Recibir la imagen de profundidad como blob
       const depthBlob = await response.blob();
 
       // Opción de descarga
-    /*   const downloadLink = document.createElement("a");
+      /* const downloadLink = document.createElement("a");
       const depthUrl = URL.createObjectURL(depthBlob);
       downloadLink.href = depthUrl;
       downloadLink.download = "depth_map.png"; // Nombre del archivo descargado
       downloadLink.click(); */
 
-
       const arrayBuffer = await depthBlob.arrayBuffer();
   
       // Procesar la imagen de profundidad
-      pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, startX, startY, (alturas) => {
+      pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, (alturas) => {
         setHeights(alturas);
         console.log(alturas);
         setProcessing(false);
@@ -147,6 +148,20 @@ const Crop = () => {
     } catch (error) {
       console.error('Error cropping image:', error);
     }
+  };
+
+  const saveCroppedImage = (croppedImageUrl, fileName = "cropped_image.jpeg") => {
+    // Crear un enlace <a> dinámicamente
+    const downloadLink = document.createElement("a");
+    downloadLink.href = croppedImageUrl; // URL creada por URL.createObjectURL
+    downloadLink.download = fileName; // Nombre del archivo que será descargado
+  
+    // Simular un clic para iniciar la descarga
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+  
+    // Limpieza: remover el enlace
+    document.body.removeChild(downloadLink);
   };
 
   const handleFile = (file) => {
