@@ -100,4 +100,62 @@ const GeneratePDFButton = (xBlocks, yBlocks, blockSize, modifiedHeights) => {
   // Guardar el PDF
   doc.save("matriz_bloques.pdf");
 };
-export default GeneratePDFButton;
+
+
+const GenerarPDFColores = (colors, xBlocks, yBlocks) => {
+    // Validar el número de colores
+    if (colors.length !== xBlocks * yBlocks * 3) {
+        console.error("El número de colores no coincide con el tamaño de la matriz");
+        return;
+    }
+
+    // Crear el documento con dimensiones específicas
+    const doc = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: [216, 279], // Tamaño en mm (8.5 x 11 pulgadas)
+    });
+
+    // Tamaño de la página en mm
+    const pageWidth = 216;
+    const pageHeight = 279;
+
+    // Calcular el tamaño máximo de las celdas cuadradas para que encajen
+    const cellSize = Math.min(pageWidth / xBlocks, pageHeight / yBlocks);
+
+    // Calcular el desplazamiento para centrar la matriz
+    const offsetX = (pageWidth - cellSize * xBlocks) / 2;
+    const offsetY = (pageHeight - cellSize * yBlocks) / 2;
+
+    let colorIndex = 0;
+
+    // Dibujar las celdas
+    for (let y = 0; y < yBlocks; y++) {
+        for (let x = 0; x < xBlocks; x++) {
+            // Obtener los colores RGB del arreglo
+            const r = colors[colorIndex++] * 255;
+            const g = colors[colorIndex++] * 255;
+            const b = colors[colorIndex++] * 255;
+
+            // Convertir a valores válidos
+            const red = Math.min(255, Math.max(0, r));
+            const green = Math.min(255, Math.max(0, g));
+            const blue = Math.min(255, Math.max(0, b));
+
+            // Calcular posición de la celda
+            const posX = offsetX + x * cellSize;
+            const posY = offsetY + y * cellSize;
+
+            // Establecer color de relleno y dibujar el rectángulo
+            doc.setFillColor(red, green, blue);
+            doc.rect(posX, posY, cellSize, cellSize, "F");
+        }
+    }
+
+    // Guardar el archivo PDF
+    doc.save("matrix_colors.pdf");
+};
+
+
+
+export {GeneratePDFButton, GenerarPDFColores};

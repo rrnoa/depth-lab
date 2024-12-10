@@ -7,7 +7,7 @@ import { ImageContext } from '../context/ImageContext';
 import { ExperienceContext } from '../context/ExperienceContext';
 import { escalarPulgadas, smoothHeightMapContrast } from '../lib/Filters';
 import { saveDataToFile, prepareDataForSave } from '../lib/storageUtils';
-import GeneratePDFButton from "./GeneratePDFButton";
+import {GeneratePDFButton, GenerarPDFColores} from "./GeneratePDFButton";
 
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
@@ -53,6 +53,7 @@ function Experience() {
   useControls('Generar Reporte', {
     generar: button(() => {
       GeneratePDFButton(saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize, saveRef.current.heights)
+      GenerarPDFColores(saveRef.current.colors, saveRef.current.xBlocks, saveRef.current.yBlocks)
     })
   }); 
 
