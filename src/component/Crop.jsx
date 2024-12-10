@@ -95,7 +95,6 @@ const Crop = () => {
       // Procesar la imagen de profundidad
       pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, (alturas) => {
         setHeights(alturas);
-        console.log(alturas);
         setProcessing(false);
       });
     } catch (error) {
@@ -245,6 +244,7 @@ const Crop = () => {
             onChange={(e) => setBlockSize(Number(e.target.value))}
           >
             <option value={1}>1</option>
+            <option value={0.375}>0.375</option>
             <option value={0.5}>0.5</option>
           </select>
         </div>

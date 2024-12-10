@@ -9,8 +9,8 @@ const ImageContextProvider = ({children}) => {
   const [croppedImage, setCroppedImage] = useState(null);
   const [xBlocks, setXBlocks] = useState(0);
   const [yBlocks, setYBlocks] = useState(0);
-  const [frameWidth, setFrameWidth] = useState(40);
-  const [frameHeight, setFrameHeight] = useState(40);
+  const [frameWidth, setFrameWidth] = useState(26);
+  const [frameHeight, setFrameHeight] = useState(26);
   const [blockSize, setBlockSize] = useState(0.5);
   const [modalOpen, setModalOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);

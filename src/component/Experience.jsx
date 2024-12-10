@@ -7,6 +7,7 @@ import { ImageContext } from '../context/ImageContext';
 import { ExperienceContext } from '../context/ExperienceContext';
 import { escalarPulgadas, smoothHeightMapContrast } from '../lib/Filters';
 import { saveDataToFile, prepareDataForSave } from '../lib/storageUtils';
+import GeneratePDFButton from "./GeneratePDFButton";
 
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
@@ -49,6 +50,12 @@ function Experience() {
     })
   }); 
 
+  useControls('Generar Reporte', {
+    generar: button(() => {
+      GeneratePDFButton(saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize, saveRef.current.heights)
+    })
+  }); 
+
 
   //escalar las alturas originales
   const scaledHeights = useMemo(() => {
@@ -63,7 +70,6 @@ function Experience() {
   //cambiar el color de un bloque cuando se selecciona/hover
   useEffect(() => {
     if (meshRef.current && colorArray.length > 0) {
-    console.log("useefect hover")
     const mesh = meshRef.current;
     const colors = new Float32Array(colorArray);
 
@@ -170,8 +176,6 @@ function Experience() {
   //modifica las alturas y las posiciones de los bloques del instaceMesh
   useEffect(() => {
     if (meshRef.current && modifiedHeights.length > 0) {
-      console.log(modifiedHeights, blockSize, xBlocks, yBlocks)
-      console.log("modifica las alturas y las posiciones de los bloques del instaceMesh")
       const blockSizeInch = blockSize * INCH_TO_METERS;
       const mesh = meshRef.current;
       let i = 0;
@@ -200,7 +204,7 @@ function Experience() {
   };
 
   useEffect(() => {
-    saveRef.current = { heights: modifiedHeights, colors: colorArray };
+    saveRef.current = { heights: modifiedHeights, colors: colorArray, xBlocks: xBlocks, yBlocks: yBlocks, blockSize: blockSize };
   }, [modifiedHeights, colorArray]);
  
   return (
@@ -214,7 +218,6 @@ function Experience() {
         receiveShadow
         onPointerMove={(e) => {
           e.stopPropagation();
-          console.log(e.instanceId)
           setHovered(e.instanceId);
         }}
         onPointerOut={() => {
