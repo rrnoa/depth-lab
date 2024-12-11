@@ -7,7 +7,7 @@ import { ImageContext } from '../context/ImageContext';
 import { ExperienceContext } from '../context/ExperienceContext';
 import { escalarPulgadas, smoothHeightMapContrast } from '../lib/Filters';
 import { saveDataToFile, prepareDataForSave } from '../lib/storageUtils';
-import {GeneratePDFButton, GenerarPDFColores} from "./GeneratePDFButton";
+import {GeneratePDFButton, GenerarPDFColores, GenerarPDFAgrupados} from "./GeneratePDFButton";
 
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
@@ -16,7 +16,7 @@ function Experience() {
 
   const { setModalOpen, heights, xBlocks, yBlocks, allColors, blockSize } = useContext(ImageContext);
   const meshRef = useRef();
-  const { modifiedHeights, setModifiedHeights, colorArray, setColorArray } = useContext(ExperienceContext);
+  const { modifiedHeights, setModifiedHeights, colorArray, setColorArray, colorDetails } = useContext(ExperienceContext);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
   const saveRef = useRef({ heights: modifiedHeights, colors: colorArray });
@@ -53,10 +53,10 @@ function Experience() {
   useControls('Generar Reporte', {
     generar: button(() => {
       GeneratePDFButton(saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize, saveRef.current.heights)
-      GenerarPDFColores(saveRef.current.colors, saveRef.current.xBlocks, saveRef.current.yBlocks)
+      GenerarPDFColores(saveRef.current.colors, saveRef.current.colorDetails, saveRef.current.xBlocks, saveRef.current.yBlocks )
+      GenerarPDFAgrupados(saveRef.current.colorDetails, saveRef.current.heights, saveRef.current.xBlocks, saveRef.current.yBlocks)
     })
-  }); 
-
+  });
 
   //escalar las alturas originales
   const scaledHeights = useMemo(() => {
@@ -205,8 +205,8 @@ function Experience() {
   };
 
   useEffect(() => {
-    saveRef.current = { heights: modifiedHeights, colors: colorArray, xBlocks: xBlocks, yBlocks: yBlocks, blockSize: blockSize };
-  }, [modifiedHeights, colorArray]);
+    saveRef.current = { heights: modifiedHeights, colors: colorArray, colorDetails: colorDetails ,xBlocks: xBlocks, yBlocks: yBlocks, blockSize: blockSize };
+  }, [modifiedHeights, colorArray, colorDetails]);
  
   return (
     <>

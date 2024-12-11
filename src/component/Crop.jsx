@@ -30,7 +30,7 @@ const Crop = () => {
       frameWidth, setFrameWidth,
       frameHeight, setFrameHeight} = useContext(ImageContext);
   
-  const {setColorArray, processing, setProcessing} = useContext(ExperienceContext);  
+  const {setColorArray, processing, setProcessing, setColorDetails} = useContext(ExperienceContext);  
   
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -115,21 +115,26 @@ const Crop = () => {
     setProcessing(true);
     const PixelObj = await pixelateImg(croppedImage, frameWidth, frameHeight, blockSize);
 
+    console.log(PixelObj)
+
     await loadDepthMap(PixelObj.imageURL, PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
 
       //setPxImg(PixelObj.imageURL);
-      setAllColors(PixelObj.allColors);
-      setXBlocks(PixelObj.xBlocks);
-      setYBlocks(PixelObj.yBlocks); 
+    setAllColors(PixelObj.allColors);
+    setXBlocks(PixelObj.xBlocks);
+    setYBlocks(PixelObj.yBlocks); 
       
-      const colors = new Float32Array(PixelObj.xBlocks * PixelObj.yBlocks * 3);
-      PixelObj.allColors.forEach((color, i) => {
-        const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-        colors[i * 3] = colorObj.r;
-        colors[i * 3 + 1] = colorObj.g;
-        colors[i * 3 + 2] = colorObj.b;
-      });
-      setColorArray(colors);
+    const colors = new Float32Array(PixelObj.xBlocks * PixelObj.yBlocks * 3);
+    PixelObj.allColors.forEach((color, i) => {
+      const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      colors[i * 3] = colorObj.r;
+      colors[i * 3 + 1] = colorObj.g;
+      colors[i * 3 + 2] = colorObj.b;
+    });
+    
+    setColorArray(colors); 
+    setColorDetails(PixelObj.colorDetails)
+
   }
 
   const handlerAplicar = async() => {
