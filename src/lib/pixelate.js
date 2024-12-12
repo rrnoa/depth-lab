@@ -48,7 +48,8 @@ export default function pixelateImg(croppedImageSrc, frameWidth, frameHeight, bl
 
       let workerUrl = 'woodxel-resources/js/pixelWorker.js';
       if (import.meta.env.MODE !== 'development') {
-        workerUrl = new URL(workerUrl, import.meta.url).href;
+        workerUrl = new URL('woodxel-resources/js/pixelWorker.js', window.location.origin).href;
+        console.log(workerUrl,"workerUrl")
       }	
 
       const worker = new Worker(workerUrl,{ type: 'module' });
