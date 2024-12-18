@@ -243,99 +243,93 @@ const GenerarPDFColores = (colors, colorDetails, xBlocks, yBlocks) => {
 };
 
 const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks) => {
+
+  console.log(heights);
+
   const INCH = 0.0254;
+
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
-    format: [216, 279],
+    format: [216, 279], // Tamaño en mm (8.5 x 11 pulgadas)
   });
 
   const pageHeight = 279;
-  const pageWidth = 216;
-  const marginLeft = 20;
-  const maxLineWidth = pageWidth - marginLeft - 20;
 
-  // Validar entradas
-  if (heights.length !== xBlocks * yBlocks || colorDetails.length !== xBlocks * yBlocks) {
-    console.error("El tamaño de heights o colorDetails no coincide con las dimensiones de la matriz.");
-    return;
-  }
-
+  // Objeto para almacenar la agrupación
   const groupedData = {};
 
-  // Agrupar datos por color y altura
+  // Recorrer la matriz de alturas y colores
   for (let y = 0; y < yBlocks; y++) {
     for (let x = 0; x < xBlocks; x++) {
       const index = y * xBlocks + x;
-      const heightInch = (heights[index] / INCH).toFixed(3);
+      const heightInch = heights[index] / INCH
+      const heightKey = heightInch.toFixed(3); // Agrupar por alturas redondeadas
       const colorDetail = colorDetails[index];
-      const colorKey = colorDetail[3];
 
-      if (!groupedData[colorKey]) {
-        groupedData[colorKey] = {
+      // Crear agrupación por altura si no existe
+      if (!groupedData[heightKey]) {
+        groupedData[heightKey] = {};
+      }
+
+      // Crear agrupación por color si no existe
+      const colorKey = colorDetail[3]; // Código hexadecimal como clave
+      if (!groupedData[heightKey][colorKey]) {
+        groupedData[heightKey][colorKey] = {
+          count: 0,
           details: colorDetail,
-          heights: {},
         };
       }
 
-      if (!groupedData[colorKey].heights[heightInch]) {
-        groupedData[colorKey].heights[heightInch] = 0;
-      }
-
-      groupedData[colorKey].heights[heightInch]++;
+      // Incrementar el contador para este color y altura
+      groupedData[heightKey][colorKey].count++;
     }
   }
 
-  // Generar el PDF
+  // Generar el PDF con los datos agrupados
   let yOffset = 10;
+
   doc.setFontSize(12);
-  doc.text("Agrupación por Color", 108, yOffset, { align: "center" });
-  yOffset += 10;
 
-  for (const colorKey in groupedData) {
-    const { details, heights } = groupedData[colorKey];
-    const [brand, name, code, hex, [r, g, b]] = details;
-
-    if (yOffset > pageHeight - 20) {
+  for (const heightKey in groupedData) {
+    if (yOffset > pageHeight - 30) {
       doc.addPage();
       yOffset = 10;
     }
 
-    // Mostrar el color y los detalles
-    doc.setFillColor(r, g, b);
-    doc.rect(marginLeft, yOffset, 10, 5, "F");
-
-    doc.setFontSize(9);
-    doc.text(
-      `${brand}, ${name}, ${code}, ${hex}`,
-      marginLeft + 15,
-      yOffset + 4
-    );
-
+    // Mostrar la altura
+    doc.setFontSize(10);
+    doc.text(`Altura: ${heightKey} in`, 20, yOffset);
     yOffset += 10;
 
-    // Mostrar las alturas y cantidades en líneas ajustadas
-    const heightsText = Object.entries(heights)
-      .map(([height, count]) => `(${height}, ${count})`)
-      .join(" ");
+    for (const colorKey in groupedData[heightKey]) {
+      const { count, details } = groupedData[heightKey][colorKey];
+      const [brand, name, code, hex, [r, g, b]] = details;
 
-    const splitLines = doc.splitTextToSize(heightsText, maxLineWidth);
-    for (const line of splitLines) {
-      if (yOffset > pageHeight - 10) {
+      if (yOffset > pageHeight - 20) {
         doc.addPage();
         yOffset = 10;
       }
-      doc.text(line, marginLeft + 15, yOffset);
-      yOffset += 6;
+
+      // Mostrar el color
+      doc.setFillColor(r, g, b);
+      doc.rect(20, yOffset, 10, 5, "F");
+
+      // Mostrar los detalles del color
+      doc.setFontSize(9);
+      doc.text(
+        `${brand}, ${name}, ${code}, ${hex}, Cantidad: ${count}`,
+        35,
+        yOffset + 4
+      );
+
+      yOffset += 10;
     }
   }
 
-  const fileName = `grouped_by_colors_${new Date().toISOString()}.pdf`;
-  doc.save(fileName);
+  // Guardar el PDF
+  doc.save("grouped_colors_heights.pdf");
 };
-
-
-
 
 
 
