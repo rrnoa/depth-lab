@@ -61,10 +61,10 @@ const Crop = () => {
   }, [selectedImage]);
 
 
-  const loadDepthMap = async (pxImg, xBlocks, yBlocks, startX, startY) => {
+  const loadDepthMap = async (ajustedImg, pxImg, xBlocks, yBlocks) => {
     try {
-
-      const responseFromUrl = await fetch(croppedImage);
+      //saveCroppedImage(ajustedImg, 'para_enviar_marigold_redimensionada.jpg')
+      const responseFromUrl = await fetch(ajustedImg);//esta es la imagen redimensionada
       const blob = await responseFromUrl.blob(); 
 
       const formData = new FormData();
@@ -84,12 +84,12 @@ const Crop = () => {
       const depthBlob = await response.blob();
 
       // Opción de descarga
-      /* const downloadLink = document.createElement("a");
+     /*  const downloadLink = document.createElement("a");
       const depthUrl = URL.createObjectURL(depthBlob);
       downloadLink.href = depthUrl;
       downloadLink.download = "depth_map.png"; // Nombre del archivo descargado
       downloadLink.click(); */
-
+ 
       const arrayBuffer = await depthBlob.arrayBuffer();
   
       // Procesar la imagen de profundidad
@@ -115,9 +115,10 @@ const Crop = () => {
     setProcessing(true);
     const PixelObj = await pixelateImg(croppedImage, frameWidth, frameHeight, blockSize);
 
-    console.log(PixelObj)
+    //saveCroppedImage(PixelObj.imageURL, 'pixelada.jpg')
+    console.log("PixelObj.xBlocks, PixelObj.yBlocks", PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
 
-    await loadDepthMap(PixelObj.imageURL, PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
+    await loadDepthMap(PixelObj.imageAjustedURL, PixelObj.imagePixelURL, PixelObj.xBlocks, PixelObj.yBlocks)
 
       //setPxImg(PixelObj.imageURL);
     setAllColors(PixelObj.allColors);
@@ -139,7 +140,6 @@ const Crop = () => {
 
   const handlerAplicar = async() => {
     await pixelateImgHandler();
-    //await loadDepthMap();
     setModalOpen(false);
   }
 
@@ -154,7 +154,7 @@ const Crop = () => {
     }
   };
 
-  const saveCroppedImage = (croppedImageUrl, fileName = "cropped_image.jpeg") => {
+  const saveCroppedImage = (croppedImageUrl, fileName = "cropped_img.jpeg") => {
     // Crear un enlace <a> dinámicamente
     const downloadLink = document.createElement("a");
     downloadLink.href = croppedImageUrl; // URL creada por URL.createObjectURL

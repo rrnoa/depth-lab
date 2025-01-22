@@ -52,9 +52,9 @@ function Experience() {
 
   useControls('Generar Reporte', {
     generar: button(() => {
-      GeneratePDFButton(saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize, saveRef.current.heights)
-      GenerarPDFColores(saveRef.current.colors, saveRef.current.colorDetails, saveRef.current.xBlocks, saveRef.current.yBlocks )
-      GenerarPDFAgrupados(saveRef.current.colorDetails, saveRef.current.heights, saveRef.current.xBlocks, saveRef.current.yBlocks)
+      //GeneratePDFButton(saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize, saveRef.current.heights)
+      //GenerarPDFColores(saveRef.current.colors, saveRef.current.colorDetails, saveRef.current.xBlocks, saveRef.current.yBlocks )
+      GenerarPDFAgrupados(saveRef.current.colorDetails, saveRef.current.heights, saveRef.current.xBlocks, saveRef.current.yBlocks, saveRef.current.blockSize)
     })
   });
 
@@ -260,5 +260,6 @@ const processHeights = (heights, xBlocks, yBlocks, cutHeight = 0.5, maxScaleFact
 
   return escalarPulgadas(alturasPulgadas, maxScaleFactor, delta);
 };
+
 
 export default Experience;

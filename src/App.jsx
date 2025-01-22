@@ -68,7 +68,6 @@ function App() {
         } }
         style={{ width: '100%', height: '100%' }}
       >
-        {/* <directionalLight position={[1, 1, 1]} /> */}
         <Stage intensity={lightIntensity} preset={preset} environment={enviroment}>
         <Experience></Experience>     
 
