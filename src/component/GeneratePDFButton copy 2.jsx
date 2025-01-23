@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 
-const GeneratePDFButton = (xBlocks, yBlocks, blockSize, modifiedHeights, colorDetails) => {  
+const GeneratePDFButton = (xBlocks, yBlocks, blockSize, modifiedHeights) => {
   const INCH = 0.0254;
   const doc = new jsPDF({
     orientation: "p",
@@ -8,230 +8,238 @@ const GeneratePDFButton = (xBlocks, yBlocks, blockSize, modifiedHeights, colorDe
     format: [216, 279], // Tamaño carta en mm
   });
 
-  const regionSize = 24 / blockSize;
-  const pageWidth = 216 - 10;
-  const pageHeight = 279 - 10;
+  const regionSize = 12;
+  const pageWidth = 216 - 20;
+  const pageHeight = 279 - 20;
   const tileSize = pageWidth / regionSize;
 
-  // Cantidad de bloques y dimensiones
   doc.setFontSize(12);
+
+  // Cantidad de bloques y dimensiones
+  doc.setFontSize(10);
   doc.text(`Cantidad de bloques: ${xBlocks * yBlocks}`, 20, 20);
-  doc.text(`Tamaño del bloque: ${blockSize}"`, 20, 30);
-  doc.text(`Dimensiones: ${xBlocks} x ${yBlocks} bloques`, 20, 40);
+  doc.text(`Tamaño del bloque: ${blockSize} mm`, 20, 30);
+  doc.text(`Dimensiones: ${xBlocks} x ${yBlocks}`, 20, 40);
 
-  // Función para dividir dimensiones en regiones uniformes
-  function distribuirEnGrupos(numero, maxTamanoGrupo) {
-    let minGrupos = Math.ceil(numero / maxTamanoGrupo);
-    let tamanoBase = Math.floor(numero / minGrupos);
-    let excedente = numero % minGrupos;
-    let grupos = new Array(minGrupos).fill(tamanoBase);
-
-    for (let i = 0; i < excedente; i++) {
-      grupos[i] += 1;
+  // Agrupar bloques por altura
+  const groupedHeights = {};
+  modifiedHeights.forEach((height) => {
+    const roundedHeight = (height / INCH).toFixed(3); // Agrupar por alturas redondeadas
+    if (!groupedHeights[roundedHeight]) {
+      groupedHeights[roundedHeight] = 0;
     }
-
-    return grupos;
-  }
-
-  // Agrupar colores y asignar números consecutivos
-  const colorMap = new Map();
-  let colorCounter = 1;
-
-  colorDetails.forEach((colorDetail) => {
-    const colorKey = colorDetail.slice(1, 4).join("-"); // Clave única basada en nombre, código y hex
-    if (!colorMap.has(colorKey)) {
-      colorMap.set(colorKey, colorCounter++);
-    }
+    groupedHeights[roundedHeight]++;
   });
 
-  const xRegions = distribuirEnGrupos(xBlocks, regionSize);
-  const yRegions = distribuirEnGrupos(yBlocks, regionSize);
+  // Mostrar lista agrupada por alturas
+  doc.text("Bloques agrupados por altura:", 20, 60);
+  const heights = Object.keys(groupedHeights).sort((a, b) => parseFloat(a) - parseFloat(b));
+  let currentY = 70;
 
-  let currentPage = 1;
+  heights.forEach((height) => {
+    if (currentY > pageHeight - 10) {
+      doc.addPage(); // Agregar nueva página si el contenido excede el límite
+      currentY = 20;
+    }
+    doc.text(`Altura: ${height} in - Cantidad: ${groupedHeights[height]}`, 20, currentY);
+    currentY += 10;
+  });
 
-  for (let regionYIndex = 0, startY = 0; regionYIndex < yRegions.length; regionYIndex++) {
-    const regionHeight = yRegions[regionYIndex];
+  // Página para las regiones de bloques
+  const totalRegionsX = Math.ceil(xBlocks / regionSize);
+  const totalRegionsY = Math.ceil(yBlocks / regionSize);
 
-    for (let regionXIndex = 0, startX = 0; regionXIndex < xRegions.length; regionXIndex++) {
-      const regionWidth = xRegions[regionXIndex];
+  let currentPage = 2; 
 
+  for (let regionYIndex = 0; regionYIndex < totalRegionsY; regionYIndex++) {
+    for (let regionXIndex = 0; regionXIndex < totalRegionsX; regionXIndex++) {
       doc.addPage();
+      const startX = 10;
+      const startY = 10;
 
-      for (let j = 0; j < regionHeight; j++) {
-        for (let i = 0; i < regionWidth; i++) {
-          const globalY = startY + j;
-          const globalX = startX + i;
+      for (let j = 0; j < regionSize; j++) {
+        for (let i = 0; i < regionSize; i++) {
+          const globalY = regionYIndex * regionSize + j;
+          const globalX = regionXIndex * regionSize + i;
 
           if (globalY >= yBlocks || globalX >= xBlocks) continue;
 
           const index = globalY * xBlocks + globalX;
           const height = modifiedHeights[index];
-          const colorDetail = colorDetails[index];
-          const colorKey = colorDetail.slice(1, 4).join("-");
-          const colorNumber = colorMap.get(colorKey); // Número único del color
-          const [r, g, b] = colorDetail[4]; // RGB
 
-          // Dibujar el rectángulo del bloque con color de fondo
-          doc.setFillColor(r, g, b);
           doc.rect(
-            5 + i * tileSize,
-            5 + j * tileSize,
+            startX + i * tileSize,
+            startY + j * tileSize,
             tileSize,
-            tileSize,
-            "F"
+            tileSize
           );
 
-          // Agregar número del color y altura
-          doc.setFontSize(4);
-          doc.setTextColor(0, 0, 0); // Color del texto negro para contraste
           doc.text(
-            `${colorNumber}`,
-            5 + i * tileSize + tileSize / 2,
-            5 + j * tileSize + tileSize / 3,
-            { align: "center" }
-          );
-          doc.text(
-            `${decimalToMixedFraction((height / INCH).toFixed(3))}`,
-            5 + i * tileSize + tileSize / 2,
-            5 + j * tileSize + (2 * tileSize) / 3,
+            `${(height / INCH).toFixed(3)}`,
+            startX + i * tileSize + tileSize / 2,
+            startY + j * tileSize + tileSize / 2,
             { align: "center" }
           );
         }
       }
-
-      doc.setFontSize(12);
 
       doc.text(
         `Región (${regionYIndex + 1}, ${regionXIndex + 1}) - Página ${currentPage}`,
         10,
         pageHeight + 5
       );
-
       currentPage++;
-      startX += regionWidth;
     }
+  }
 
-    startY += regionHeight;
+  // Página final con el grid resumen
+  doc.addPage();
+  const gridTileSize = pageWidth / totalRegionsX;
+  const gridStartX = 10;
+  const gridStartY = 10;
+
+  doc.setFontSize(10);
+  doc.text("Grid Resumen", pageWidth / 2 + 10, 10, { align: "center" });
+
+  for (let gridY = 0; gridY < totalRegionsY; gridY++) {
+    for (let gridX = 0; gridX < totalRegionsX; gridX++) {
+      const rectX = gridStartX + gridX * gridTileSize;
+      const rectY = gridStartY + gridY * gridTileSize;
+
+      doc.rect(rectX, rectY, gridTileSize, gridTileSize);
+
+      doc.text(
+        `${gridY + 1}, ${gridX + 1}`,
+        rectX + gridTileSize / 2,
+        rectY + gridTileSize / 2,
+        { align: "center" }
+      );
+    }
   }
 
   // Guardar el PDF
   doc.save("matriz_bloques.pdf");
 };
 
-const GenerateGripWhite = (xBlocks, yBlocks, blockSize, modifiedHeights, colorDetails) => {  
-  const INCH = 0.0254;
+
+
+const GenerarPDFColores = (colors, colorDetails, xBlocks, yBlocks) => {
+  if (colors.length !== xBlocks * yBlocks * 3) {
+      console.error("El número de colores no coincide con el tamaño de la matriz");
+      return;
+  }
+
   const doc = new jsPDF({
-    orientation: "p",
-    unit: "mm",
-    format: [216, 279], // Tamaño carta en mm
+      orientation: "p",
+      unit: "mm",
+      format: [216, 279], // Tamaño en mm (8.5 x 11 pulgadas)
   });
 
-  const regionSize = 24 / blockSize;
-  const pageWidth = 216 - 10;
-  const pageHeight = 279 - 10;
-  const tileSize = pageWidth / regionSize;
+  const pageWidth = 216;
+  const pageHeight = 279;
 
-  // Cantidad de bloques y dimensiones
-  doc.setFontSize(12);
-  doc.text(`Cantidad de bloques: ${xBlocks * yBlocks}`, 20, 20);
-  doc.text(`Tamaño del bloque: ${blockSize}"`, 20, 30);
-  doc.text(`Dimensiones: ${xBlocks} x ${yBlocks} bloques`, 20, 40);
+  // Mapa para asignar números a los colores
+  const colorNumbers = new Map(); // Mapear colores a números consecutivos
+  let colorNumber = 1;
 
-  // Función para dividir dimensiones en regiones uniformes
-  function distribuirEnGrupos(numero, maxTamanoGrupo) {
-    let minGrupos = Math.ceil(numero / maxTamanoGrupo);
-    let tamanoBase = Math.floor(numero / minGrupos);
-    let excedente = numero % minGrupos;
-    let grupos = new Array(minGrupos).fill(tamanoBase);
+  // Crear una matriz con los números de los colores
+  const numberMatrix = [];
+  let colorIndex = 0;
 
-    for (let i = 0; i < excedente; i++) {
-      grupos[i] += 1;
-    }
+  for (let y = 0; y < yBlocks; y++) {
+      const row = [];
+      for (let x = 0; x < xBlocks; x++) {
+          const r = Math.round(colors[colorIndex++] * 255);
+          const g = Math.round(colors[colorIndex++] * 255);
+          const b = Math.round(colors[colorIndex++] * 255);
 
-    return grupos;
-  }
+          // Crear el identificador único del color
+          const colorKey = `${r},${g},${b}`;
 
-  // Agrupar colores y asignar números consecutivos
-  const colorMap = new Map();
-  let colorCounter = 1;
-
-  colorDetails.forEach((colorDetail) => {
-    const colorKey = colorDetail.slice(1, 4).join("-"); // Clave única basada en nombre, código y hex
-    if (!colorMap.has(colorKey)) {
-      colorMap.set(colorKey, colorCounter++);
-    }
-  });
-
-  const xRegions = distribuirEnGrupos(xBlocks, regionSize);
-  const yRegions = distribuirEnGrupos(yBlocks, regionSize);
-
-  let currentPage = 1;
-
-  for (let regionYIndex = 0, startY = 0; regionYIndex < yRegions.length; regionYIndex++) {
-    const regionHeight = yRegions[regionYIndex];
-
-    for (let regionXIndex = 0, startX = 0; regionXIndex < xRegions.length; regionXIndex++) {
-      const regionWidth = xRegions[regionXIndex];
-
-      doc.addPage();
-
-      for (let j = 0; j < regionHeight; j++) {
-        for (let i = 0; i < regionWidth; i++) {
-          const globalY = startY + j;
-          const globalX = startX + i;
-
-          if (globalY >= yBlocks || globalX >= xBlocks) continue;
-
-          const index = globalY * xBlocks + globalX;
-          const height = modifiedHeights[index];
-          const colorDetail = colorDetails[index];
-          const colorKey = colorDetail.slice(1, 4).join("-");
-          const colorNumber = colorMap.get(colorKey); // Número único del color
-          const [r, g, b] = colorDetail[4]; // RGB
-
-          // Dibujar el rectángulo del bloque con color de fondo
-          doc.rect(
-            5 + i * tileSize,
-            5 + j * tileSize,
-            tileSize,
-            tileSize
-          );
-
-          // Agregar número del color y altura
-          doc.setFontSize(4);
-          doc.setTextColor(0, 0, 0); // Color del texto negro para contraste
-          doc.text(
-            `${colorNumber}`,
-            5 + i * tileSize + tileSize / 2,
-            5 + j * tileSize + tileSize / 3,
-            { align: "center" }
-          );
-          doc.text(
-            `${decimalToMixedFraction((height / INCH).toFixed(3))}`,
-            5 + i * tileSize + tileSize / 2,
-            5 + j * tileSize + (2 * tileSize) / 3,
-            { align: "center" }
-          );
-        }
+          // Asignar un número al color si no lo tiene
+          if (!colorNumbers.has(colorKey)) {
+              colorNumbers.set(colorKey, {num: colorNumber++, count: 1, index: (colorIndex / 3) - 1});
+          } else {
+            const existingEntry = colorNumbers.get(colorKey);
+            existingEntry.count += 1; // Incrementar el valor de count
+            colorNumbers.set(colorKey, existingEntry); // Actualizar el Map con el nuevo valor
+          }
+          row.push(colorNumbers.get(colorKey).num);
       }
-
-      doc.setFontSize(12);
-
-      doc.text(
-        `Región (${regionYIndex + 1}, ${regionXIndex + 1}) - Página ${currentPage}`,
-        10,
-        pageHeight + 5
-      );
-
-      currentPage++;
-      startX += regionWidth;
-    }
-
-    startY += regionHeight;
+      numberMatrix.push(row);
   }
 
-  // Guardar el PDF
-  doc.save("matriz_bloques_blanco.pdf");
+  // Página de detalles de colores
+  doc.setFontSize(10);
+  doc.text(`Dimensiones de la matriz: ${xBlocks} x ${yBlocks}`, 20, 10);
+  doc.text(`Total de bloques: ${colors.length / 3}`, 20, 20);
+  
+  let i=0;
+  for (const [colorKey, value] of colorNumbers) {
+    let details = colorDetails[value.index]
+/*     console.log(`Color: ${colorKey}, Num: ${value.num}, Count: ${value.count}, Index: ${value.index}`);*/
+
+    doc.text( `${value.num}`, 20, 40 + i * 6);
+    doc.setDrawColor(0, 0, 0);
+    doc.setFillColor(details[4][0], details[4][1], details[4][2]);
+    doc.rect(30 , 37 + i * 6, 10, 4, "FD");
+    
+    doc.text( `${details[0]} , ${details[1]}, ${details[2]}, ${details[3]}`, 45, 40 + i * 6);
+
+    console.log(value.index, details[4]);
+    i++;
+  }
+
+  // Página para la matriz coloreada
+  doc.addPage();
+  const cellSize = Math.min(pageWidth / xBlocks, pageHeight / yBlocks);
+  const offsetX = (pageWidth - cellSize * xBlocks) / 2;
+  const offsetY = (pageHeight - cellSize * yBlocks) / 2;
+
+  colorIndex = 0;
+
+  // Dibujar las celdas coloreadas
+  for (let y = 0; y < yBlocks; y++) {
+      for (let x = 0; x < xBlocks; x++) {
+
+          let detail = colorDetails[colorIndex++];
+
+          const r = detail[4][0];
+          const g = detail[4][1];
+          const b = detail[4][2];
+
+          const posX = offsetX + x * cellSize;
+          const posY = offsetY + y * cellSize;
+
+          doc.setFillColor(r, g, b);
+          doc.rect(posX, posY, cellSize, cellSize, "F");
+      }
+  }
+
+  // Página para la matriz numerada
+  doc.addPage();
+
+  // Dibujar las celdas numeradas
+  for (let y = 0; y < yBlocks; y++) {
+      for (let x = 0; x < xBlocks; x++) {
+          const posX = offsetX + x * cellSize;
+          const posY = offsetY + y * cellSize;
+
+          // Número en la celda
+          doc.setFontSize(8);
+          doc.text(
+              `${numberMatrix[y][x]}`,
+              posX + cellSize / 2,
+              posY + cellSize / 2,
+              {
+                  align: "center",
+                  baseline: "middle",
+              }
+          );
+      }
+  }
+
+  doc.save("matrix_colors.pdf");
 };
 
 const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks, blockSize) => {
@@ -432,12 +440,11 @@ const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks, blockSize)
 };
 
 
-export {GeneratePDFButton, GenerateGripWhite, GenerarPDFAgrupados};
+export {GeneratePDFButton, GenerarPDFColores, GenerarPDFAgrupados};
 
 
 
   function decimalToMixedFraction(decimal) {
-    console.log(decimal)
     const whole = Math.floor(decimal); // Parte entera
     const fractional = decimal - whole; // Parte fraccionaria
   
