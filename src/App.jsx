@@ -9,6 +9,7 @@ import { Stage } from "@react-three/drei"
 import { button, useControls } from "leva"
 import { ExperienceContext } from "./context/ExperienceContext"
 import { loadDataFromFile } from "./lib/storageUtils"
+import { color } from "three/examples/jsm/nodes/Nodes.js"
 
 function App() {   
   const fileInputRef = useRef(null);
@@ -19,7 +20,12 @@ function App() {
     enviroment: {options: ['city', 'studio', 'sunset','dawn','night','warehouse','forest','apartment','park','lobby']}
   });
   const {modalOpen} = useContext(ImageContext);
-  const {setModifiedHeights, setColorArray} = useContext(ExperienceContext);
+  const {setModifiedHeights, setColorArray, setColorDetails} = useContext(ExperienceContext);
+  const {    
+    setBlockSize,           
+    setXBlocks,      
+    setYBlocks,
+  } = useContext(ImageContext);
 
 
   useControls('Cargar Datos', {
@@ -33,22 +39,20 @@ function App() {
     if (file) {
       loadDataFromFile(file, (data) => {
         // Actualizar los estados del contexto
-        setModifiedHeights(data.heights);
-        const colors = new Float32Array(data.colors.length * 3);
-        data.colors.forEach((color, i) => {
-          colors[i * 3] = color[0] / 255;
-          colors[i * 3 + 1] = color[1] / 255;
-          colors[i * 3 + 2] = color[2] / 255;
-        });
-        setColorArray(colors);
+        setModifiedHeights(data.heights);  
+        setBlockSize(data.blockSize);
+        setXBlocks(data.xBlocks);
+        setYBlocks(data.yBlocks)
+        setColorDetails(data.colorDetails)
+        const colors = new Float32Array(data.colorDetails.length * 3);
+        data.colorDetails.forEach((color, i) => {
+              const colorObj = new THREE.Color(`rgb(${color[4][0]}, ${color[4][1]}, ${color[4][2]})`);
+              colors[i * 3] = colorObj.r;
+              colors[i * 3 + 1] = colorObj.g;
+              colors[i * 3 + 2] = colorObj.b;
+            });        
+        setColorArray(colors);        
       });
-    }
-  };
-
-  const handleLoadImg = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      console.log('cargando imagen')
     }
   };
 

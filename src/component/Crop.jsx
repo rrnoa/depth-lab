@@ -7,14 +7,10 @@ import getCroppedImg from '../lib/cropImage';
 import pixelateImg from "../lib/pixelate";
 import { ImageContext } from '../context/ImageContext';
 import { ExperienceContext } from '../context/ExperienceContext'; 
-import ImageSidebar from './ImageSidebar';
+//import ImageSidebar from './ImageSidebar';
 import { pixelate16 } from '../lib/pixel16';
-import Barloader from "react-spinners/ClipLoader";
+//import Barloader from "react-spinners/ClipLoader";
 
-const override = {
-  display: "block",
-  margin: "0 auto"
-};
 
 const Crop = () => {
 
@@ -26,7 +22,6 @@ const Crop = () => {
       selectedDepthMap,
       selectedImage,      
       setModalOpen,
-      setAllColors,
       frameWidth, setFrameWidth,
       frameHeight, setFrameHeight} = useContext(ImageContext);
   
@@ -94,6 +89,7 @@ const Crop = () => {
   
       // Procesar la imagen de profundidad
       pixelate16(arrayBuffer, pxImg, xBlocks, yBlocks, (alturas) => {
+        console.log("en Crop",alturas)
         setHeights(alturas);
         setProcessing(false);
       });
@@ -116,23 +112,27 @@ const Crop = () => {
     const PixelObj = await pixelateImg(croppedImage, frameWidth, frameHeight, blockSize);
 
     //saveCroppedImage(PixelObj.imageURL, 'pixelada.jpg')
-    console.log("PixelObj.xBlocks, PixelObj.yBlocks", PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
+    //console.log("PixelObj.xBlocks, PixelObj.yBlocks", PixelObj.xBlocks, PixelObj.yBlocks, croppedAreaPixels.x, croppedAreaPixels.y)
 
     await loadDepthMap(PixelObj.imageAjustedURL, PixelObj.imagePixelURL, PixelObj.xBlocks, PixelObj.yBlocks)
 
-      //setPxImg(PixelObj.imageURL);
-    setAllColors(PixelObj.allColors);
+      //setPxImg(PixelObj.imageURL);    
+    
     setXBlocks(PixelObj.xBlocks);
     setYBlocks(PixelObj.yBlocks); 
       
+
+    //aqui utilizar colordetails en lugar de allcolors
+    //cuando el usuario copia un color CTRL+C en Experience deberia copiar colordetails y convertirlo usando esta misma formula
+    //
     const colors = new Float32Array(PixelObj.xBlocks * PixelObj.yBlocks * 3);
-    PixelObj.allColors.forEach((color, i) => {
-      const colorObj = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+    PixelObj.colorDetails.forEach((color, i) => {
+      const colorObj = new THREE.Color(`rgb(${color[4][0]}, ${color[4][1]}, ${color[4][2]})`);
       colors[i * 3] = colorObj.r;
       colors[i * 3 + 1] = colorObj.g;
       colors[i * 3 + 2] = colorObj.b;
     });
-    
+    console.log("setColorArray(colors)", colors)
     setColorArray(colors); 
     setColorDetails(PixelObj.colorDetails)
 

@@ -437,7 +437,6 @@ export {GeneratePDFButton, GenerateGripWhite, GenerarPDFAgrupados};
 
 
   function decimalToMixedFraction(decimal) {
-    console.log(decimal)
     const whole = Math.floor(decimal); // Parte entera
     const fractional = decimal - whole; // Parte fraccionaria
   

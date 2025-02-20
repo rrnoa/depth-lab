@@ -13,16 +13,15 @@ export const saveDataToFile = (data, filename = 'data.json') => {
     document.body.removeChild(link);
   };
   
-  export const prepareDataForSave = (heights, colors) => {
+  export const prepareDataForSave = (save_data) => {
+    console.log(save_data);
     const data = {
-      heights,
-      colors: []
-    };
-  
-    for (let i = 0; i < colors.length; i += 3) {
-      data.colors.push([colors[i] * 255, colors[i + 1] * 255, colors[i + 2] * 255]);
-    }
-  
+      xBlocks: save_data.xBlocks,
+      yBlocks: save_data.yBlocks,
+      blockSize: save_data.blockSize,
+      heights: save_data.heights,
+      colorDetails: save_data.colorDetails
+    };  
     return data;
   };
 

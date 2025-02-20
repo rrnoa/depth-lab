@@ -12,14 +12,20 @@ import {GeneratePDFButton, GenerateGripWhite, GenerarPDFAgrupados} from "./Gener
 const tempObject = new THREE.Object3D();
 const INCH_TO_METERS = 0.0254;
 
+
+/**
+ * ColorArray [[r,g,b],[r,g,b],..]es el arreglo de colores final que se va a guardar, allColors [r,g,b,r,g,b,r,g,b...]son los colores originales con que vinieron los pixels. 
+ */
+
 function Experience() {
 
-  const { setModalOpen, heights, xBlocks, yBlocks, allColors, blockSize } = useContext(ImageContext);
+  const { setModalOpen, heights, xBlocks, yBlocks, blockSize } = useContext(ImageContext);
   const meshRef = useRef();
-  const { modifiedHeights, setModifiedHeights, colorArray, setColorArray, colorDetails } = useContext(ExperienceContext);
+  const { modifiedHeights, setModifiedHeights, colorArray, setColorArray, colorDetails, setColorDetails } = useContext(ExperienceContext);
   const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
   const saveRef = useRef({ heights: modifiedHeights, colors: colorArray });
+  const [currentCopiedDetails, setCurrentCopiedDetails] = useState(-1);//los detalles del bloque que fue copiado actualmente
   
  
   const {perfVisible} = useControls('Inicio', {
@@ -45,7 +51,7 @@ function Experience() {
 
   useControls('Guardar Datos', {
     guardar: button(() => {
-      const data = prepareDataForSave(saveRef.current.heights, saveRef.current.colors);
+      const data = prepareDataForSave(saveRef.current);
       saveDataToFile(data);
     })
   }); 
@@ -60,12 +66,22 @@ function Experience() {
   });
 
   //escalar las alturas originales
+
   const scaledHeights = useMemo(() => {
+    if (!heights || heights.length === 0) {
+        console.warn("⏳ Esperando a que modifiedHeights tenga valores...");
+        return [];
+    }
+
+    console.log("📏 Procesando heights:", heights); 
     return processHeights(heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges);
+
   }, [heights, xBlocks, yBlocks, cutHeight, maxScaleFactor, delta, smoothEdges]);
 
   //Cuando se escalan las alturas por primera vez se actualiza modifiedHeights
   useEffect(() => {
+    if (scaledHeights.length === 0) return;
+    console.log("✅ Actualizando modifiedHeights con:", scaledHeights);
     setModifiedHeights(scaledHeights);
   }, [scaledHeights]);
 
@@ -111,12 +127,15 @@ function Experience() {
                 });
             } else if (e.ctrlKey && e.key === 'c') {
                 // Copiar el color del bloque seleccionado
-                setBlockColor({ blockColor: `rgb(${allColors[selected][0]}, ${allColors[selected][1]}, ${allColors[selected][2]})` });
-            } else if (e.ctrlKey && e.key === 'v') {
+                setBlockColor({ blockColor: `rgb(${colorDetails[selected][4][0]}, ${colorDetails[selected][4][1]}, ${colorDetails[selected][4][2]})` });
+                setCurrentCopiedDetails(selected);//los detalles del color copiado
+                console.log('selected', `rgb(${colorDetails[selected][4][0]}, ${colorDetails[selected][4][1]}, ${colorDetails[selected][4][2]})`)
+            } else if (e.ctrlKey && e.key === 'v' && currentCopiedDetails !== -1) {
                 // Pegar el color copiado en el bloque seleccionado
                 const levaColor = new THREE.Color(blockColor);
                 setBlockColorOnMesh(selected, levaColor);
                 updateColorArray(selected, levaColor);
+                updateColorDetails(selected);
             }
         }
     };
@@ -126,7 +145,7 @@ function Experience() {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-}, [selected, setBlockColor, blockColor, allColors, delta]);
+}, [selected, setBlockColor, blockColor, delta]);
 
   // Manejar las teclas de dirección para seleccionar el bloque adyacente
   useEffect(() => {
@@ -174,6 +193,18 @@ function Experience() {
       return newColors;
     });
   };
+
+
+  const updateColorDetails = (actual) => {
+
+    setColorDetails((prev) => {
+      const updatedDetails = [...prev];
+
+      updatedDetails[actual] = [...updatedDetails[currentCopiedDetails]]; 
+
+      return updatedDetails;
+    });
+  }
 
   //modifica las alturas y las posiciones de los bloques del instaceMesh
   useEffect(() => {
