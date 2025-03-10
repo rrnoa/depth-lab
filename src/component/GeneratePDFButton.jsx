@@ -254,6 +254,7 @@ const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks, blockSize)
   }
 
   const groupedData = {};
+  const heightCounts = {};
 
   // Agrupar datos por color y altura
   for (let y = 0; y < yBlocks; y++) {
@@ -275,6 +276,11 @@ const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks, blockSize)
       }
 
       groupedData[colorKey].heights[heightInch]++;
+      
+      if (!heightCounts[heightInch]) {
+        heightCounts[heightInch] = 0;
+      }
+      heightCounts[heightInch]++;
     }
   }
 
@@ -425,6 +431,22 @@ const GenerarPDFAgrupados = (colorDetails, heights, xBlocks, yBlocks, blockSize)
       startX += xTamano;
     }
     startY += yTamano;
+  }
+
+  // Agregar una nueva página con la cantidad de bloques por alturas
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.text("Cantidad de Bloques por Altura", 10, 15);
+  yOffset = 25;
+  doc.setFontSize(10);
+
+  for (const [height, count] of Object.entries(heightCounts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
+    if (yOffset > pageHeight - 10) {
+      doc.addPage();
+      yOffset = 10;
+    }
+    doc.text(`${decimalToMixedFraction(parseFloat(height))} (${count} bloques)`, 10, yOffset);
+    yOffset += 6;
   }
 
   const fileName = `grouped_by_colors_${new Date().toISOString()}.pdf`;
